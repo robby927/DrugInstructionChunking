@@ -1,0 +1,14 @@
+processed 38636 tokens with 3076 phrases; found: 3166 phrases; correct: 2774.
+accuracy:  94.39%; precision:  87.62%; recall:  90.18%; FB1:  88.88
+           体重: precision:  43.75%; recall:  43.75%; FB1:  43.75  16
+     单日剂量: precision:  83.78%; recall:  89.21%; FB1:  86.41  296
+     单次剂量: precision:  85.11%; recall:  89.56%; FB1:  87.28  665
+           年龄: precision:  96.06%; recall:  97.19%; FB1:  96.62  432
+           性别: precision:  71.43%; recall:  83.33%; FB1:  76.92  7
+     慎用禁忌: precision:   0.00%; recall:   0.00%; FB1:   0.00  0
+     特殊人群: precision:  56.25%; recall:  75.00%; FB1:  64.29  64
+           疗程: precision:  85.89%; recall:  89.17%; FB1:  87.50  163
+     给药途径: precision:  91.39%; recall:  94.09%; FB1:  92.72  592
+     给药速度: precision:  79.55%; recall:  81.40%; FB1:  80.46  44
+     给药频次: precision:  93.08%; recall:  96.60%; FB1:  94.81  549
+           诊断: precision:  79.88%; recall:  77.14%; FB1:  78.49  338
