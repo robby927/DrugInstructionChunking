@@ -2,7 +2,7 @@ import copy
 from enum import Enum
 
 from data import read_corpus, read_corpus_3
-from eval import myevaluate
+from eval import myevaluate, get_f1
 from data_io import read_predicted_corpus
 import numpy as np
 
@@ -152,7 +152,8 @@ def word_pos_tag_tuple2eval_data(tuples):
 
 def train():
     models = ['BiLSTM-CRF', 'ALBERT-BiLSTM-CRF/base', 'ALBERT-BiLSTM-CRF/tiny', 'BERT-BiLSTM-CRF/base']
-
+    threshold = 0
+    template_selected = dict()
     for model_name in models:
         print('\n------------------------------------' + model_name + '-------------------------------------\n')
         base_path = './dataset/' + model_name + '/'
@@ -172,6 +173,7 @@ def train():
         print('\ndev data baseline result of bieo:')
         dev_data_beo_eval = data2eval_data(dev_data_bieo)
         baseline_result = myevaluate(dev_data_beo_eval, base_path + 'dev_data_beo_eval', base_path + 'dev_beo_result_eval')
+        f1_baseline = get_f1(baseline_result)
 
         print('\ntest data baseline result of bieo')
         test_data_beo_eval = data2eval_data(test_data_bieo)
@@ -185,28 +187,47 @@ def train():
             for init_template in templates:
                 templates_extended = template_extend(init_template.elements, init_template.max_end_index)
                 for template in templates_extended:
+                    dev_cp = copy.deepcopy(dev)
                     print('\n template:',
                           [(element.index, element.name, element.value, element.relation) for element in template])
-                    for one_sent_data in dev:
+                    for one_sent_data in dev_cp:
                         match(one_sent_data, template, chunk_class)
 
-        print('\n match test data...')
-        for chunk_class, templates in templates_dict.items():
-            for init_template in templates:
-                templates_extended = template_extend(init_template.elements, init_template.max_end_index)
-                for template in templates_extended:
-                    print('\n template:',
-                          [(element.index, element.name, element.value, element.relation) for element in template])
-                    for one_sent_data in test:
-                        match(one_sent_data, template, chunk_class)
+                    print('\nthe performance of the template in dev data:')
+                    dev_matched_eval_bieo = word_pos_tag_tuple2eval_data(dev_cp)
+                    result_template = myevaluate(dev_matched_eval_bieo, base_path + 'deved_data_beo', base_path + 'deved_result_beo')
+                    f1_template = get_f1(result_template)
+                    if f1_template - f1_baseline >= threshold:
+                        if template_selected.get(chunk_class) != None:
+                            template_selected.get(chunk_class).append(template)
+                        else:
+                            template_temp = []
+                            template_temp.append(template)
+                            template_selected.update({chunk_class: template_temp})
+
+        for chunk_class, templates in template_selected.items():
+            for template in templates:
+                print('\n template:',
+                      [(element.index, element.name, element.value, element.relation) for element in template])
+                for one_sent_data in dev:
+                    match(one_sent_data, template, chunk_class)
 
         print('\nthe performance of sequence rule matched dev data bieo')
         dev_matched_eval_bieo = word_pos_tag_tuple2eval_data(dev)
         myevaluate(dev_matched_eval_bieo, base_path + 'deved_data_beo', base_path + 'deved_result_beo')
 
+        print('\n match test data...')
+        for chunk_class, templates in template_selected.items():
+            for template in templates:
+                print('\n template:',
+                      [(element.index, element.name, element.value, element.relation) for element in template])
+                for one_sent_data in test:
+                    match(one_sent_data, template, chunk_class)
+
         print('\nthe performance of sequence rule matched test data bieo')
         test_matched_eval_bieo = word_pos_tag_tuple2eval_data(test)
         myevaluate(test_matched_eval_bieo, base_path + 'tested_data_beo', base_path + 'tested_result_beo')
+
 
 
 def template_extend(template, max_end_index):
